@@ -2,10 +2,14 @@
 
 import sys
 from multiprocessing import Process,Queue,Lock
+import getopt
+import configparser
+from datetime import datetime
 
 que1 = Queue()
 que2 = Queue()
 
+'''
 args = sys.argv[1:]
 index = args.index('-c')
 configfile = args[index+1]
@@ -13,6 +17,18 @@ index = args.index('-d')
 userdatafile = args[index+1]
 index = args.index('-o')
 outputfile = args[index+1]
+'''
+city = 'DEFAULT'
+option,test = getopt.getopt(sys.argv[1:],'C:c:d:o:')
+for opt,val in option:
+    if opt == '-C':
+        city = val.upper()
+    if opt == '-c':
+        configfile = val
+    if opt == '-d':
+        userdatafile = val
+    if opt == '-o':
+        outputfile = val
 def userdata():
     lists = []
     with open(userdatafile,'r') as files:
@@ -26,9 +42,9 @@ def get_social(config):
     count = 0.00
     for key,value in config.items():
 
-        if str(key) == 'JiShuL':
+        if str(key) == 'jishul':
              continue
-        elif str(key) == 'JiShuH':
+        elif str(key) == 'jishuh':
              continue
         else:
              count += float(value)
@@ -36,10 +52,10 @@ def get_social(config):
 
 def cal(value,config,count):
 
-        if(float(value) <= float(config['JiShuL'])):
-            social = float(config['JiShuL'])*count
-        elif(float(value) >= float(config['JiShuH'])):
-            social = float(config['JiShuH'])*count
+        if(float(value) <= float(config['jishul'])):
+            social = float(config['jishul'])*count
+        elif(float(value) >= float(config['jishuh'])):
+            social = float(config['jishuh'])*count
         else:
             social = float(value)*count
         return social
@@ -76,21 +92,24 @@ def calculator():
     newdata = []
     config = {}
     data = que1.get()
-    with open(configfile,'r') as files:
-        for line in files.readlines():
-            if not line:
-                continue
-            item = line.split('=')
-            key = item[0].strip()
-            value = item[1].strip()
-            config[key] = value
+    
+    con = configparser.ConfigParser()
+    con.read(configfile)
+    section = con.items(city)
+    for getkey,getval in section:
+        key = getkey
+        value = getval
+        config[key] = value
+
+
     count = get_social(config)
     for i in data[::2]:
         ID = int(i)
         pay = int(data[data.index(i)+1])
         social = cal(pay,config,count)
         tax,salary = get_tax(pay,social)
-        strnewdata =  str(ID)+','+str(pay)+','+str(format(social,'.2f'))+','+str(format(tax,'.2f'))+','+str(format(salary,'.2f'))
+        t = datetime.now()
+        strnewdata =  str(ID)+','+str(pay)+','+str(format(social,'.2f'))+','+str(format(tax,'.2f'))+','+str(format(salary,'.2f'))+','+datetime.strftime(t,'%Y-%m-%d %H:%M:%S')
         newdata.append(strnewdata)
     que2.put(newdata)
 
