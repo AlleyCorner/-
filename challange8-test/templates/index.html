@@ -1,0 +1,16 @@
+<html lang="zh-CN">
+    <head>
+        Mmeta charset="UTF-8">
+        <title>Index</title>
+    <head>
+    <body>
+        <ul>
+            {% for file in files %}
+            <li><a href="{{url_for('file',file_id=file.id)}}">{{file.title}}</a></li>
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for tag in tags %}
+                <li>{{ tag }}</li>
+    </body>
+</html>
